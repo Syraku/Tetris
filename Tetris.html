@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris by Siraku</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+            gap: 1px;
+            width: 300px;
+            height: 600px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 3px solid #ffcc00;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+            padding: 5px;
+        }
+        
+        .cell {
+            background-color: rgba(30, 30, 60, 0.5);
+            border-radius: 2px;
+            transition: background-color 0.1s;
+        }
+        
+        .filled {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 150px;
+        }
+        
+        .panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #ffcc00;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+        
+        .next-piece {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            background-color: rgba(30, 30, 60, 0.5);
+            border-radius: 5px;
+            padding: 5px;
+        }
+        
+        .stats {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 240px;
+            height: 240px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(145deg, #ffcc00, #ff9900);
+            border: none;
+            border-radius: 10px;
+            color: #1a1a40;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .rotate {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .down {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        
+        .right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .drop {
+            grid-column: 2;
+            grid-row: 3;
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #ffcc00;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .instructions h2 {
+            color: #ffcc00;
+            margin-bottom: 10px;
+        }
+        
+        .instructions p {
+            margin: 5px 0;
+            font-size: 1rem;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            display: none;
+        }
+        
+        .game-over h2 {
+            font-size: 3rem;
+            color: #ff3333;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        
+        .restart-btn {
+            background: linear-gradient(145deg, #00cc66, #00994d);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s;
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Warna untuk tetromino */
+        .i { background-color: #00f0f0; }
+        .j { background-color: #0000f0; }
+        .l { background-color: #f0a000; }
+        .o { background-color: #f0f000; }
+        .s { background-color: #00f000; }
+        .t { background-color: #a000f0; }
+        .z { background-color: #f00000; }
+        
+        @media (max-width: 600px) {
+            .game-board {
+                width: 250px;
+                height: 500px;
+            }
+            
+            .controls {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TETRIS</h1>
+            <p>Dibuat oleh Siraku</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="game-board" id="board"></div>
+            
+            <div class="info-panel">
+                <div class="panel">
+                    <h2>BERIKUTNYA</h2>
+                    <div class="next-piece" id="next-piece"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>SKOR</h2>
+                    <div class="stats" id="score">0</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>LEVEL</h2>
+                    <div class="stats" id="level">1</div>
+                </div>
+                
+                <div class="panel">
+                    <h2>BARIS</h2>
+                    <div class="stats" id="lines">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn rotate">↻</button>
+            <button class="control-btn left">←</button>
+            <button class="control-btn down">↓</button>
+            <button class="control-btn right">→</button>
+            <button class="control-btn drop">⤓</button>
+        </div>
+        
+        <div class="instructions">
+            <h2>CARA BERMAIN</h2>
+            <p>↻ Rotasi: Putar balok</p>
+            <p>← → : Gerakkan kiri/kanan</p>
+            <p>↓ : Turun lebih cepat</p>
+            <p>⤓ : Jatuhkan langsung</p>
+            <p>Isi baris untuk menghapus dan mendapatkan poin!</p>
+        </div>
+    </div>
+    
+    <div class="game-over" id="game-over">
+        <h2>GAME OVER!</h2>
+        <p>Skor Akhir: <span id="final-score">0</span></p>
+        <button class="restart-btn" id="restart-btn">MAIN LAGI</button>
+    </div>
+
+    <script>
+        // Konstanta game
+        const COLS = 10;
+        const ROWS = 20;
+        const BLOCK_SIZE = 30;
+        
+        // Bentuk tetromino
+        const SHAPES = [
+            { shape: [[1, 1, 1, 1]], className: 'i' }, // I
+            { shape: [[1, 0, 0], [1, 1, 1]], className: 'j' }, // J
+            { shape: [[0, 0, 1], [1, 1, 1]], className: 'l' }, // L
+            { shape: [[1, 1], [1, 1]], className: 'o' }, // O
+            { shape: [[0, 1, 1], [1, 1, 0]], className: 's' }, // S
+            { shape: [[0, 1, 0], [1, 1, 1]], className: 't' }, // T
+            { shape: [[1, 1, 0], [0, 1, 1]], className: 'z' }  // Z
+        ];
+        
+        // Poin untuk baris yang dihapus
+        const LINE_POINTS = [0, 40, 100, 300, 1200];
+        
+        // Variabel game state
+        let board = [];
+        let currentPiece = null;
+        let nextPiece = null;
+        let score = 0;
+        let level = 1;
+        let lines = 0;
+        let gameOver = false;
+        let dropInterval = null;
+        
+        // Elemen DOM
+        const boardElement = document.getElementById('board');
+        const nextPieceElement = document.getElementById('next-piece');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const linesElement = document.getElementById('lines');
+        const gameOverElement = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-btn');
+        
+        // Inisialisasi papan
+        function initBoard() {
+            board = Array.from({ length: ROWS }, () => 
+                Array.from({ length: COLS }, () => 0)
+            );
+            
+            boardElement.innerHTML = '';
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // Buat tetromino acak
+        function createPiece() {
+            const randomIndex = Math.floor(Math.random() * SHAPES.length);
+            return {
+                ...SHAPES[randomIndex],
+                row: 0,
+                col: Math.floor(COLS / 2) - 1
+            };
+        }
+        
+        // Gambar papan
+        function drawBoard() {
+            // Reset semua sel
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.className = 'cell';
+            });
+            
+            // Gambar blok yang sudah ditempatkan
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c]) {
+                        const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                        cell.classList.add('filled', board[r][c].className);
+                    }
+                }
+            }
+            
+            // Gambar tetromino saat ini
+            if (currentPiece) {
+                const { shape, row, col, className } = currentPiece;
+                
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c]) {
+                            const boardRow = row + r;
+                            const boardCol = col + c;
+                            
+                            if (boardRow >= 0 && boardRow < ROWS && boardCol >= 0 && boardCol < COLS) {
+                                const cell = document.querySelector(`.cell[data-row="${boardRow}"][data-col="${boardCol}"]`);
+                                cell.classList.add('filled', className);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Gambar next piece
+        function drawNextPiece() {
+            nextPieceElement.innerHTML = '';
+            
+            if (!nextPiece) return;
+            
+            const { shape, className } = nextPiece;
+            const rows = shape.length;
+            const cols = shape[0].length;
+            
+            // Buat grid untuk next piece
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    
+                    if (r < rows && c < cols && shape[r][c]) {
+                        cell.classList.add('filled', className);
+                    }
+                    
+                    nextPieceElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // Perbarui statistik game
+        function updateStats() {
+            scoreElement.textContent = score;
+            levelElement.textContent = level;
+            linesElement.textContent = lines;
+        }
+        
+        // Cek tabrakan
+        function hasCollision(piece, rowOffset = 0, colOffset = 0) {
+            const { shape, row, col } = piece;
+            
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        const newRow = row + r + rowOffset;
+                        const newCol = col + c + colOffset;
+                        
+                        if (
+                            newCol < 0 || 
+                            newCol >= COLS || 
+                            newRow >= ROWS || 
+                            (newRow >= 0 && board[newRow][newCol])
+                        ) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        // Gerakkan tetromino
+        function movePiece(rowOffset, colOffset) {
+            if (gameOver) return;
+            
+            currentPiece.row += rowOffset;
+            currentPiece.col += colOffset;
+            
+            if (hasCollision(currentPiece)) {
+                currentPiece.row -= rowOffset;
+                currentPiece.col -= colOffset;
+                
+                // Jika tidak bisa bergerak ke bawah, lock piece
+                if (rowOffset > 0) {
+                    lockPiece();
+                }
+                
+                return false;
+            }
+            
+            drawBoard();
+            return true;
+        }
+        
+        // Rotasi tetromino
+        function rotatePiece() {
+            if (gameOver) return;
+            
+            const oldShape = currentPiece.shape;
+            const rows = oldShape.length;
+            const cols = oldShape[0].length;
+            
+            // Buat bentuk yang dirotasi
+            const newShape = Array.from({ length: cols }, () => 
+                Array.from({ length: rows }, () => 0)
+            );
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    newShape[c][rows - 1 - r] = oldShape[r][c];
+                }
+            }
+            
+            const oldShapeBackup = currentPiece.shape;
+            currentPiece.shape = newShape;
+            
+            // Cek tabrakan setelah rotasi
+            if (hasCollision(currentPiece)) {
+                // Coba geser jika ada tabrakan
+                if (!tryKick()) {
+                    currentPiece.shape = oldShapeBackup;
+                }
+            }
+            
+            drawBoard();
+        }
+        
+        // Coba geser piece saat rotasi tidak memungkinkan (wall kick)
+        function tryKick() {
+            const offsets = [
+                [0, -1], [0, 1], [-1, 0], [1, 0],
+                [-1, -1], [-1, 1], [1, -1], [1, 1]
+            ];
+            
+            for (const [rowOffset, colOffset] of offsets) {
+                currentPiece.row += rowOffset;
+                currentPiece.col += colOffset;
+                
+                if (!hasCollision(currentPiece)) {
+                    return true;
+                }
+                
+                currentPiece.row -= rowOffset;
+                currentPiece.col -= colOffset;
+            }
+            
+            return false;
+        }
+        
+        // Kunci piece di tempatnya
+        function lockPiece() {
+            const { shape, row, col, className } = currentPiece;
+            
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        const boardRow = row + r;
+                        const boardCol = col + c;
+                        
+                        if (boardRow >= 0) {
+                            board[boardRow][boardCol] = { className };
+                        }
+                    }
+                }
+            }
+            
+            // Cek baris yang penuh
+            clearLines();
+            
+            // Buat piece baru
+            currentPiece = nextPiece;
+            nextPiece = createPiece();
+            drawNextPiece();
+            
+            // Cek game over
+            if (hasCollision(currentPiece)) {
+                endGame();
+            }
+        }
+        
+        // Hapus baris yang penuh
+        function clearLines() {
+            let linesCleared = 0;
+            
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r].every(cell => cell !== 0)) {
+                    // Hapus baris
+                    for (let row = r; row > 0; row--) {
+                        board[row] = [...board[row - 1]];
+                    }
+                    
+                    // Tambahkan baris kosong di atas
+                    board[0] = Array(COLS).fill(0);
+                    linesCleared++;
+                    r++; // Cek baris yang sama lagi
+                }
+            }
+            
+            if (linesCleared > 0) {
+                // Hitung skor
+                score += LINE_POINTS[linesCleared] * level;
+                lines += linesCleared;
+                
+                // Tingkatkan level setiap 10 baris
+                level = Math.floor(lines / 10) + 1;
+                
+                // Perbarui statistik
+                updateStats();
+                
+                // Percepat game
+                clearInterval(dropInterval);
+                startDropInterval();
+            }
+        }
+        
+        // Jatuhkan langsung
+        function hardDrop() {
+            if (gameOver) return;
+            
+            while (movePiece(1, 0)) {
+                score++;
+                updateStats();
+            }
+        }
+        
+        // Mulai interval jatuh
+        function startDropInterval() {
+            const baseSpeed = 1000;
+            const speed = Math.max(100, baseSpeed - (level - 1) * 100);
+            
+            dropInterval = setInterval(() => {
+                movePiece(1, 0);
+            }, speed);
+        }
+        
+        // Akhiri game
+        function endGame() {
+            gameOver = true;
+            clearInterval(dropInterval);
+            
+            finalScoreElement.textContent = score;
+            gameOverElement.style.display = 'flex';
+        }
+        
+        // Mulai game baru
+        function startGame() {
+            initBoard();
+            score = 0;
+            level = 1;
+            lines = 0;
+            gameOver = false;
+            gameOverElement.style.display = 'none';
+            
+            // Buat piece awal
+            nextPiece = createPiece();
+            currentPiece = createPiece();
+            nextPiece = createPiece();
+            
+            drawBoard();
+            drawNextPiece();
+            updateStats();
+            startDropInterval();
+        }
+        
+        // Event listeners untuk kontrol
+        document.querySelector('.rotate').addEventListener('click', () => rotatePiece());
+        document.querySelector('.left').addEventListener('click', () => movePiece(0, -1));
+        document.querySelector('.right').addEventListener('click', () => movePiece(0, 1));
+        document.querySelector('.down').addEventListener('click', () => movePiece(1, 0));
+        document.querySelector('.drop').addEventListener('click', hardDrop);
+        restartButton.addEventListener('click', startGame);
+        
+        // Kontrol keyboard
+        document.addEventListener('keydown', (e) => {
+            if (gameOver) return;
+            
+            switch (e.key) {
+                case 'ArrowLeft':
+                    movePiece(0, -1);
+                    break;
+                case 'ArrowRight':
+                    movePiece(0, 1);
+                    break;
+                case 'ArrowDown':
+                    movePiece(1, 0);
+                    break;
+                case 'ArrowUp':
+                    rotatePiece();
+                    break;
+                case ' ':
+                    hardDrop();
+                    break;
+            }
+        });
+        
+        // Mulai game
+        startGame();
+    </script>
+</body>
+</html>
